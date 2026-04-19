@@ -13,6 +13,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
+    alias(libs.plugins.google.services)  // Tarvitaan google-services.json:lle
 }
 
 android {
@@ -55,7 +56,7 @@ android {
             )
         }
         debug {
-            applicationIdSuffix = ".debug"
+            applicationIdSuffix = ""
             versionNameSuffix = "-debug"
         }
     }
@@ -120,6 +121,14 @@ dependencies {
 
     // Accompanist Permissions
     implementation(libs.accompanist.permissions)
+
+    // Firebase BOM – hallitsee kaikkien Firebase-kirjastojen versiot automaattisesti
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.auth)       // Authentication – käyttäjätunnistus
+    implementation(libs.firebase.firestore)  // Firestore – löytöjen metadata pilveen
+
+    // Guava – ratkaisee Firebase + CameraX ListenableFuture -ristiriidan
+    implementation("com.google.guava:guava:32.1.3-android")
 
     // Test
     testImplementation(libs.junit)

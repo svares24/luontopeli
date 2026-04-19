@@ -15,6 +15,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.luontopeli.viewmodel.MapViewModel
 import com.example.luontopeli.viewmodel.WalkViewModel
+import com.example.luontopeli.viewmodel.formatDistance
 import com.example.luontopeli.viewmodel.formatDuration
 import com.example.luontopeli.viewmodel.toFormattedDate
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
@@ -154,74 +155,76 @@ fun MapScreen(
         }
 
         // --- Kävelytilasto-kortti alareunassa ---
-        @Composable
-        fun WalkStatsCard(viewModel: WalkViewModel) {
-            val session by viewModel.currentSession.collectAsState()
-            val isWalking by viewModel.isWalking.collectAsState()
+        WalkStatsCard(walkViewModel)
+    }
+}
 
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer
-                )
+@Composable
+fun WalkStatsCard(viewModel: WalkViewModel) {
+    val session by viewModel.currentSession.collectAsState()
+    val isWalking by viewModel.isWalking.collectAsState()
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer
+        )
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                text = if (isWalking) "Kävely käynnissä" else "Kävely pysäytetty",
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onPrimaryContainer
+            )
+
+            // Näytä tilastot vain jos sessio on olemassa
+            session?.let { s ->
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = "${s.stepCount}",
+                            style = MaterialTheme.typography.headlineMedium,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Text("askelta", style = MaterialTheme.typography.bodySmall)
+                    }
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = formatDistance(s.distanceMeters),
+                            style = MaterialTheme.typography.headlineMedium,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Text("matka", style = MaterialTheme.typography.bodySmall)
+                    }
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = formatDuration(s.startTime),
+                            style = MaterialTheme.typography.headlineMedium,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Text("aika", style = MaterialTheme.typography.bodySmall)
+                    }
+                }
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(top = 12.dp)
             ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text(
-                        text = if (isWalking) "Kävely käynnissä" else "Kävely pysäytetty",
-                        style = MaterialTheme.typography.titleSmall,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-
-                    // Näytä tilastot vain jos sessio on olemassa
-                    session?.let { s ->
-                        Row(
-                            modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
-                            horizontalArrangement = Arrangement.SpaceEvenly
-                        ) {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text(
-                                    text = "${s.stepCount}",
-                                    style = MaterialTheme.typography.headlineMedium,
-                                    color = MaterialTheme.colorScheme.primary
-                                )
-                                Text("askelta", style = MaterialTheme.typography.bodySmall)
-                            }
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text(
-                                    text = formatDistance(s.distanceMeters),
-                                    style = MaterialTheme.typography.headlineMedium,
-                                    color = MaterialTheme.colorScheme.primary
-                                )
-                                Text("matka", style = MaterialTheme.typography.bodySmall)
-                            }
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text(
-                                    text = formatDuration(s.startTime),
-                                    style = MaterialTheme.typography.headlineMedium,
-                                    color = MaterialTheme.colorScheme.primary
-                                )
-                                Text("aika", style = MaterialTheme.typography.bodySmall)
-                            }
-                        }
-                    }
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(top = 12.dp)
-                    ) {
-                        if (!isWalking) {
-                            Button(
-                                onClick = { viewModel.startWalk() },
-                                modifier = Modifier.weight(1f)
-                            ) { Text("Aloita kävely") }
-                        } else {
-                            OutlinedButton(
-                                onClick = { viewModel.stopWalk() },
-                                modifier = Modifier.weight(1f)
-                            ) { Text("Lopeta") }
-                        }
-                    }
+                if (!isWalking) {
+                    Button(
+                        onClick = { viewModel.startWalk() },
+                        modifier = Modifier.weight(1f)
+                    ) { Text("Aloita kävely") }
+                } else {
+                    OutlinedButton(
+                        onClick = { viewModel.stopWalk() },
+                        modifier = Modifier.weight(1f)
+                    ) { Text("Lopeta") }
                 }
             }
         }
