@@ -35,7 +35,8 @@ android {
     if (!keystorePath.isNullOrBlank()) {
         signingConfigs {
             create("release") {
-                storeFile = file(keystorePath)
+                // Luetaan arvot local.properties -tiedostosta
+                storeFile = file(localProperties.getProperty("KEYSTORE_PATH") ?: "")
                 storePassword = localProperties.getProperty("KEYSTORE_PASSWORD") ?: ""
                 keyAlias = localProperties.getProperty("KEY_ALIAS") ?: ""
                 keyPassword = localProperties.getProperty("KEY_PASSWORD") ?: ""
@@ -45,17 +46,18 @@ android {
 
     buildTypes {
         release {
-            if (!keystorePath.isNullOrBlank()) {
-                signingConfig = signingConfigs.getByName("release")
-            }
-            isMinifyEnabled = false
-            isShrinkResources = false
+            // Käytä release-allekirjoitusta
+            signingConfig = signingConfigs.getByName("release")
+            // Pienennä koodia ProGuardilla
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
         }
         debug {
+            // Debug-buildissa käytetään automaattisesti debug-avainta
             applicationIdSuffix = ""
             versionNameSuffix = "-debug"
         }

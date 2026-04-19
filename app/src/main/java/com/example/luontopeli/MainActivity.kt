@@ -23,18 +23,11 @@ import dagger.hilt.android.AndroidEntryPoint
  */
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
-
-    /**
-     * Aktiviteetin luontimetodi.
-     * - installSplashScreen() näyttää käynnistysruudun (splash screen) sovelluksen avautuessa
-     * - setContent asettaa Compose-sisällön, joka käyttää LuontopeliTheme-teemaa
-     */
     override fun onCreate(savedInstanceState: Bundle?) {
-        // Asennetaan splash screen ennen super.onCreate()-kutsua
+        // Asenna splash screen ENNEN super.onCreate()-kutsua
         installSplashScreen()
         super.onCreate(savedInstanceState)
 
-        // Asetetaan Compose UI -sisältö Material3-teemalla
         setContent {
             LuontopeliTheme {
                 LuontopeliApp()
