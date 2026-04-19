@@ -7,8 +7,47 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.*
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Camera
+import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Save
+import androidx.compose.material3.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
+import com.example.luontopeli.ml.ClassificationResult
+import com.example.luontopeli.viewmodel.CameraViewModel
+import java.io.File
 
 @Composable
 fun CameraScreen(viewModel: CameraViewModel = viewModel()) {
@@ -151,6 +190,77 @@ fun CapturedImageView(
                 Icon(Icons.Default.Save, null)
                 Spacer(Modifier.width(8.dp))
                 Text("Tallenna löytö")
+            }
+        }
+    }
+}
+
+@Composable
+fun ClassificationResultCard(result: ClassificationResult) {
+    Card(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = when (result) {
+                is ClassificationResult.Success ->
+                    if (result.confidence > 0.8f)
+                        MaterialTheme.colorScheme.primaryContainer
+                    else
+                        MaterialTheme.colorScheme.secondaryContainer
+                else -> MaterialTheme.colorScheme.errorContainer
+            }
+        )
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            when (result) {
+                is ClassificationResult.Success -> {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = "Tunnistettu:",
+                            style = MaterialTheme.typography.titleSmall
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        // Varmuustaso-badge
+                        Badge(
+                            containerColor = when {
+                                result.confidence > 0.8f -> Color(0xFF2E7D32)
+                                result.confidence > 0.6f -> Color(0xFFF57C00)
+                                else -> Color(0xFFD32F2F)
+                            }
+                        ) {
+                            Text("${"%.0f".format(result.confidence * 100)}%")
+                        }
+                    }
+
+                    Text(
+                        text = result.label,
+                        style = MaterialTheme.typography.headlineSmall,
+                        modifier = Modifier.padding(vertical = 8.dp)
+                    )
+
+                    // Varmuuspalkki
+                    LinearProgressIndicator(
+                        progress = result.confidence,
+                        modifier = Modifier.fillMaxWidth().height(8.dp).clip(CircleShape),
+                        color = when {
+                            result.confidence > 0.8f -> Color(0xFF2E7D32)
+                            result.confidence > 0.6f -> Color(0xFFF57C00)
+                            else -> Color(0xFFD32F2F)
+                        }
+                    )
+                }
+
+                is ClassificationResult.NotNature -> {
+                    Text("Ei luontokohde", style = MaterialTheme.typography.titleMedium)
+                    Text(
+                        "Kuvassa tunnistettiin: ${result.allLabels.joinToString { it.text }}",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+
+                is ClassificationResult.Error -> {
+                    Text("Tunnistus epäonnistui: ${result.message}",
+                        style = MaterialTheme.typography.bodyMedium)
+                }
             }
         }
     }
